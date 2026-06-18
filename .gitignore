@@ -1,0 +1,6 @@
+# local scratch / device dumps / firmware
+*.ipsw
+*.shsh*
+blobs/
+backups/
+.dextroesoteric/
