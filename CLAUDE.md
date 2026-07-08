@@ -33,23 +33,39 @@ let the curious tinker.)
 ## The two real gates (one responsible, one hard research)
 1. **Activation Lock (iCloud / Find My).** If the phone was signed into iCloud (iOS 7+ supports
    it), then *after* a restore it will demand the **original Apple ID + password** to reactivate.
-   Since this is **family-owned**, the legitimate path is to use the **family's Apple ID**. ⚠️
-   **Do not attempt to circumvent Activation Lock.** If the family can't supply the Apple ID, the
+   Provenance: it's a **cousin's old phone** (never used), passed to Ben via his **dad** —
+   legitimate reuse, but Activation Lock, if present, follows the **cousin's** iCloud account. The
+   legitimate path is the cousin supplying the Apple ID, or removing the device from their iCloud
+   remotely. There's a real chance it was never signed in (find out at activation). ⚠️ **Do not
+   attempt to circumvent Activation Lock.** If it's locked and the cousin's ID can't be had, the
    project pauses there — that's the honest boundary. (A passcode lock is *not* Activation Lock;
    the passcode is wiped by the normal restore.)
-2. **iOS 6 itself — the central open question.** Apple **no longer signs iOS 6**, so a plain
-   `idevicerestore` *cannot* install it. Getting iOS 6 onto an A5 in 2026 requires one of:
-   - **saved SHSH blobs** for that exact iOS 6 build (almost certainly were never saved → likely dead end), or
-   - an **A5 downgrade method** that doesn't need matching blobs. Historically: **powdersn0w**
-     (xerub) booted custom-patched downgraded firmware on A5/A6 *without* matching blobs —
-     tethered/semi-tethered, fiddly. **VERIFY before promising anything:** is iOS 6 a supported
-     powdersn0w target? what's the current working toolchain on modern Linux? does any
-     bootrom-level path (checkm8 lists A5–A11, but A5 tool support was historically experimental)
-     apply? **Treat iOS 6 as research, not a plan, until a path is confirmed.**
+2. **iOS 6 itself — RESEARCH RESOLVED (2026-07-02): there is a real, no-blobs path.** Apple
+   **no longer signs iOS 6**, so a plain `idevicerestore` *cannot* install it — but two facts
+   change everything, both verified against **LukeZGD/Legacy-iOS-Kit** (actively maintained, runs
+   on Linux — Ubuntu 22.04+/Debian 12+/Fedora 40+/Arch):
+   - **iOS 6.1.3 is an "OTA-signed" build.** Apple still signs the 6.1.3 OTA blob for A5. That
+     means iOS 6.1.3 is restorable **today, without saved SHSH blobs**, via the OTA-downgrade
+     path. (The other OTA-signed A5 versions are 8.4.1 and 10.3.3.) This is the single biggest
+     unlock — the old "blobs were never saved → dead end" fear does **not** apply to 6.1.3.
+   - The old **powdersn0w** route also still exists (targets 5.0–9.3.5 on A5; needs iOS 7.1.x
+     blobs for the 4S) — but we likely don't need it, since 6.1.3 is OTA-signed.
+   - ⚠️ **The one catch — entering pwned DFU on A5.** A5 has no software-only checkm8; putting the
+     4S into *pwned* DFU needs **either** (a) the device already jailbroken → use **kDFU** (no
+     extra hardware; LukeZGD's explicit recommendation for A5), **or** (b) **checkm8-a5** external
+     hardware: a **Raspberry Pi Pico** (RP2040 — *not* Pico 2/2W) + a micro-USB OTG-Y cable
+     (~$5, the reliable option), or an ATmega Arduino + USB Host Shield (less recommended).
+     → **Practical plan:** the current 4S almost certainly isn't jailbroken, so path (a) means
+     *first* jailbreak wherever it currently sits, *then* kDFU → 6.1.3. If that's awkward, a
+     ~$5 Pi Pico makes path (b) turnkey. **This is the next thing to pin down against the device's
+     actual current iOS version.**
+   - Result target: **iOS 6.1.3, untethered** once restored. Hacktivation is supported by the kit
+     (matters for gate #1 if the family Apple ID is unavailable — but the responsible boundary on
+     genuine **Activation Lock** still stands; hacktivation ≠ defeating someone's iCloud lock).
 
-   **Fallback that IS reachable:** iOS **9.3.6** + the **Phoenix** semi-untethered jailbreak
-   (32-bit, 9.3.x). Less retro-pure than iOS 6, but a solid, low-risk jukebox base with real
-   control. Good plan B if the iOS 6 path doesn't pan out.
+   **Fallback that is also reachable:** iOS **9.3.6** + the **Phoenix** semi-untethered jailbreak
+   (32-bit, 9.3.x). Less retro-pure than iOS 6, but a solid, low-risk jukebox base — and note the
+   jailbreak-then-kDFU route to 6.1.3 could actually *start* from a 9.3.6+Phoenix device.
 
 ## Suggested order of attack (next session)
 1. **Assess the device.** Plug in over USB; `idevice_id -l` / `ideviceinfo` (may work even if
@@ -58,8 +74,10 @@ let the curious tinker.)
 2. **Install the toolkit** (the apt line above; Ben runs it).
 3. **Baseline restore to iOS 9.3.6** (signed, safe) → get a clean, working, activated device
    first. This proves the Linux toolchain end-to-end and gives a known-good fallback state.
-4. **Choose the retro target** with eyes open: (a) iOS 6 — only after the research in gate #2
-   confirms a real path; (b) iOS 9.3.6 + Phoenix jailbreak — the reachable retro base.
+4. **Choose the retro target** with eyes open: (a) **iOS 6.1.3 — now a confirmed path** via
+   Legacy-iOS-Kit's OTA downgrade (needs pwned DFU: kDFU off a jailbreak, or a ~$5 Pi Pico); or
+   (b) iOS 9.3.6 + Phoenix jailbreak — the reachable retro base, which can itself be the launchpad
+   into the kDFU→6.1.3 route.
 5. **Make it a media player.** Load music/video (libimobiledevice / `ideviceinstaller`), theme
    it, consider a kiosk-ish always-on setup. (Details once the OS target is settled.)
 
